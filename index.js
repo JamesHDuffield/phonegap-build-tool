@@ -36,14 +36,14 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var request = require("request-promise");
+var archiver = require("archiver");
+var args = require("commander");
 var fs = require("fs");
 var _ = require("lodash");
-var args = require("commander");
-var archiver = require("archiver-promise");
+var request = require("request-promise");
+var streamBuffers = require("stream-buffers");
 var baseUrl = 'https://build.phonegap.com/api/v1';
 var pollTime = 10000;
-var zipPath = './www.zip';
 args
     .version('0.1')
     .option('-a, --appId <item>', 'Phone gap app id', parseInt)
@@ -67,7 +67,7 @@ function zip() {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    fileOutput = fs.createWriteStream(zipPath);
+                    fileOutput = new streamBuffers.WritableStreamBuffer();
                     archive = archiver('zip', {
                         zlib: { level: 9 },
                     });
@@ -79,19 +79,21 @@ function zip() {
                 case 1:
                     _a.sent();
                     console.log('Zipped app for upload');
-                    return [2 /*return*/];
+                    return [2 /*return*/, fileOutput.getContents()];
             }
         });
     });
 }
 function build(platform) {
     return __awaiter(this, void 0, void 0, function () {
-        var response, keyId, password, status, e, result, outfilename, file;
+        var zippedApp, response, keyId, password, status, e, result, outfilename, file;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, zip()];
+                case 0: return [4 /*yield*/, zip()
+                    // Get all keys
+                ];
                 case 1:
-                    _a.sent();
+                    zippedApp = _a.sent();
                     return [4 /*yield*/, request.get(baseUrl + "/keys?auth_token=" + args.token)];
                 case 2:
                     response = _a.sent();
@@ -108,7 +110,7 @@ function build(platform) {
                     _a.label = 5;
                 case 5: 
                 // Submit
-                return [4 /*yield*/, request.put(baseUrl + "/apps/" + args.appId + "?auth_token=" + args.token, { formData: { file: fs.createReadStream(zipPath) } })];
+                return [4 /*yield*/, request.put(baseUrl + "/apps/" + args.appId + "?auth_token=" + args.token, { formData: { file: zippedApp } })];
                 case 6:
                     // Submit
                     _a.sent();
@@ -137,7 +139,7 @@ function build(platform) {
                     }
                     return [3 /*break*/, 8];
                 case 11:
-                    if (!(status == 'complete')) return [3 /*break*/, 13];
+                    if (!(status === 'complete')) return [3 /*break*/, 13];
                     outfilename = "watercoolr-" + platform + "." + (platform === 'ios' ? 'ipa' : 'apk');
                     return [4 /*yield*/, request.get(baseUrl + "/apps/" + args.appId + "/" + platform + "?auth_token=" + args.token).pipe(fs.createWriteStream(outfilename))];
                 case 12:
@@ -150,4 +152,3 @@ function build(platform) {
     });
 }
 build(args.platform);
-//# sourceMappingURL=index.js.map
