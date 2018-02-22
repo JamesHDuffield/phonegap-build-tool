@@ -4,11 +4,11 @@ import * as request from 'request-promise';
 import * as fs from 'fs';
 import * as _ from 'lodash';
 import * as args from 'commander';
-import * as archiver from 'archiver-promise';
+import * as archiver from 'archiver';
+import * as streamBuffers from 'stream-buffers';
 
 const baseUrl = 'https://build.phonegap.com/api/v1';
 const pollTime = 10000;
-const zipPath = './www.zip';
 
 args
   .version('0.1')
@@ -25,8 +25,8 @@ async function sleep(duration: number) {
   });
 }
 
-async function zip() {
-  const fileOutput = fs.createWriteStream(zipPath);
+async function zip(): Promise<Buffer> {
+  const fileOutput = new streamBuffers.WritableStreamBuffer()
   const archive = archiver('zip', {
     zlib: { level: 9 },
   });
@@ -36,10 +36,11 @@ async function zip() {
   archive.glob('config.xml');
   await archive.finalize();
   console.log('Zipped app for upload');
+  return fileOutput.getContents();
 }
 
 async function build(platform: string) {
-  await zip();
+  const zippedApp = await zip();
   // Get all keys
   const response = await request.get(`${baseUrl}/keys?auth_token=${args.token}`);
   const keyId = _.get(JSON.parse(response), `keys.${platform}.all[0].id`);
@@ -52,7 +53,7 @@ async function build(platform: string) {
     console.log('Unlocked key');
   }
   // Submit
-  await request.put(`${baseUrl}/apps/${args.appId}?auth_token=${args.token}`, { formData: { file: fs.createReadStream(zipPath) } });
+  await request.put(`${baseUrl}/apps/${args.appId}?auth_token=${args.token}`, { formData: { file: zippedApp } });
   console.log('Uploaded source code');
   // Start build
   await request.post(`${baseUrl}/apps/${args.appId}/build/${platform}?auth_token=${args.token}`);
