@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import * as request from 'request-promise';
 import * as fs from 'fs';
 import * as _ from 'lodash';

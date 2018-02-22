@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -34,7 +35,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 var request = require("request-promise");
 var fs = require("fs");
 var _ = require("lodash");
@@ -68,7 +69,7 @@ function zip() {
                 case 0:
                     fileOutput = fs.createWriteStream(zipPath);
                     archive = archiver('zip', {
-                        zlib: { level: 9 }
+                        zlib: { level: 9 },
                     });
                     archive.pipe(fileOutput);
                     archive.glob('www/**/*');
@@ -149,3 +150,4 @@ function build(platform) {
     });
 }
 build(args.platform);
+//# sourceMappingURL=index.js.map
