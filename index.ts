@@ -32,7 +32,7 @@ async function zip() {
   });
   archive.pipe(fileOutput);
   archive.glob('www/**/*');
-  archive.glob('resources/**');
+  archive.glob('resources/**/*');
   archive.glob('config.xml');
   await archive.finalize();
   console.log('Zipped app for upload');

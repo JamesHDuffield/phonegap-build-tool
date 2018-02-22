@@ -73,7 +73,7 @@ function zip() {
                     });
                     archive.pipe(fileOutput);
                     archive.glob('www/**/*');
-                    archive.glob('resources/**');
+                    archive.glob('resources/**/*');
                     archive.glob('config.xml');
                     return [4 /*yield*/, archive.finalize()];
                 case 1:
