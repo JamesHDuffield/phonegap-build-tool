@@ -86,7 +86,7 @@ function zip() {
 }
 function build(platform) {
     return __awaiter(this, void 0, void 0, function () {
-        var zippedApp, response, keyId, password, status, e, result, outfilename, file;
+        var zippedApp, response, keyId, password, zipAsStream, status, e, result, outfilename, file;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, zip()
@@ -108,11 +108,11 @@ function build(platform) {
                     _a.sent();
                     console.log('Unlocked key');
                     _a.label = 5;
-                case 5: 
-                // Submit
-                return [4 /*yield*/, request.put(baseUrl + "/apps/" + args.appId + "?auth_token=" + args.token, { formData: { file: zippedApp } })];
+                case 5:
+                    zipAsStream = new streamBuffers.ReadableStreamBuffer();
+                    zipAsStream.put(zippedApp);
+                    return [4 /*yield*/, request.put(baseUrl + "/apps/" + args.appId + "?auth_token=" + args.token, { formData: { file: zipAsStream } })];
                 case 6:
-                    // Submit
                     _a.sent();
                     console.log('Uploaded source code');
                     // Start build

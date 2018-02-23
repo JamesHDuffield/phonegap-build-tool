@@ -53,7 +53,10 @@ async function build(platform: string) {
     console.log('Unlocked key')
   }
   // Submit
-  await request.put(`${baseUrl}/apps/${args.appId}?auth_token=${args.token}`, { formData: { file: zippedApp } })
+  const zipAsStream = new streamBuffers.ReadableStreamBuffer()
+  zipAsStream.put(zippedApp)
+
+  await request.put(`${baseUrl}/apps/${args.appId}?auth_token=${args.token}`, { formData: { file: zipAsStream } })
   console.log('Uploaded source code')
   // Start build
   await request.post(`${baseUrl}/apps/${args.appId}/build/${platform}?auth_token=${args.token}`)
