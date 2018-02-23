@@ -55,8 +55,8 @@ async function build(platform: string) {
   // Submit
   const zipAsStream = new streamBuffers.ReadableStreamBuffer()
   zipAsStream.put(zippedApp)
-
-  await request.put(`${baseUrl}/apps/${args.appId}?auth_token=${args.token}`, { formData: { file: zipAsStream } })
+  const res = await request.put(`${baseUrl}/apps/${args.appId}?auth_token=${args.token}`, { formData: { file: zipAsStream } })
+  const appTitle = JSON.parse(res).title
   console.log('Uploaded source code')
   // Start build
   await request.post(`${baseUrl}/apps/${args.appId}/build/${platform}?auth_token=${args.token}`)
@@ -75,7 +75,7 @@ async function build(platform: string) {
   }
   // Download
   if (status === 'complete') {
-    const outfilename = `watercoolr-${platform}.${platform  === 'ios' ? 'ipa' : 'apk'}`
+    const outfilename = `${appTitle ? appTitle : 'app'}-${platform}.${platform  === 'ios' ? 'ipa' : 'apk'}`
     const file = await request.get(`${baseUrl}/apps/${args.appId}/${platform}?auth_token=${args.token}`).pipe(fs.createWriteStream(outfilename))
     console.log(`Downloaded ${outfilename}`)
   }

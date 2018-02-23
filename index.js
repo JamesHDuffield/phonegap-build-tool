@@ -86,7 +86,7 @@ function zip() {
 }
 function build(platform) {
     return __awaiter(this, void 0, void 0, function () {
-        var zippedApp, response, keyId, password, zipAsStream, status, e, result, outfilename, file;
+        var zippedApp, response, keyId, password, zipAsStream, res, appTitle, status, e, result, outfilename, file;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, zip()
@@ -113,7 +113,8 @@ function build(platform) {
                     zipAsStream.put(zippedApp);
                     return [4 /*yield*/, request.put(baseUrl + "/apps/" + args.appId + "?auth_token=" + args.token, { formData: { file: zipAsStream } })];
                 case 6:
-                    _a.sent();
+                    res = _a.sent();
+                    appTitle = JSON.parse(res).title;
                     console.log('Uploaded source code');
                     // Start build
                     return [4 /*yield*/, request.post(baseUrl + "/apps/" + args.appId + "/build/" + platform + "?auth_token=" + args.token)];
@@ -140,7 +141,7 @@ function build(platform) {
                     return [3 /*break*/, 8];
                 case 11:
                     if (!(status === 'complete')) return [3 /*break*/, 13];
-                    outfilename = "watercoolr-" + platform + "." + (platform === 'ios' ? 'ipa' : 'apk');
+                    outfilename = (appTitle ? appTitle : 'app') + "-" + platform + "." + (platform === 'ios' ? 'ipa' : 'apk');
                     return [4 /*yield*/, request.get(baseUrl + "/apps/" + args.appId + "/" + platform + "?auth_token=" + args.token).pipe(fs.createWriteStream(outfilename))];
                 case 12:
                     file = _a.sent();
