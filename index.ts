@@ -55,7 +55,10 @@ async function build(platform: string) {
   // Submit
   const zipAsStream = new streamBuffers.ReadableStreamBuffer()
   zipAsStream.put(zippedApp)
-  const res = await request.put(`${baseUrl}/apps/${args.appId}?auth_token=${args.token}`, { formData: { file: zipAsStream } })
+  const r = request.put(`${baseUrl}/apps/${args.appId}?auth_token=${args.token}`)
+  const form = r.form()
+  form.append('file', zipAsStream)
+  const res = await r
   const appTitle = JSON.parse(res).title
   console.log('Uploaded source code')
   // Start build
