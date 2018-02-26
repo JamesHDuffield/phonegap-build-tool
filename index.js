@@ -78,7 +78,7 @@ function zip() {
                     return [4 /*yield*/, archive.finalize()];
                 case 1:
                     _a.sent();
-                    console.log('Zipped app for upload');
+                    console.log("Zipped app for upload. Size " + fileOutput.size());
                     return [2 /*return*/, fileOutput.getContents()];
             }
         });
@@ -86,7 +86,7 @@ function zip() {
 }
 function build(platform) {
     return __awaiter(this, void 0, void 0, function () {
-        var zippedApp, response, keyId, password, zipAsStream, r, form, res, appTitle, status, e, result, outfilename, file;
+        var zippedApp, response, keyId, password, zipAsStream, res, appTitle, status, e, result, outfilename, file;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, zip()
@@ -111,14 +111,11 @@ function build(platform) {
                 case 5:
                     zipAsStream = new streamBuffers.ReadableStreamBuffer();
                     zipAsStream.put(zippedApp);
-                    r = request.put(baseUrl + "/apps/" + args.appId + "?auth_token=" + args.token);
-                    form = r.form();
-                    form.append('file', zipAsStream);
-                    return [4 /*yield*/, r];
+                    return [4 /*yield*/, request.put(baseUrl + "/apps/" + args.appId + "?auth_token=" + args.token, { formData: { file: zipAsStream } })];
                 case 6:
                     res = _a.sent();
                     appTitle = JSON.parse(res).title;
-                    console.log('Uploaded source code');
+                    console.log("Uploaded source code, new version " + JSON.parse(res).version);
                     // Start build
                     return [4 /*yield*/, request.post(baseUrl + "/apps/" + args.appId + "/build/" + platform + "?auth_token=" + args.token)];
                 case 7:

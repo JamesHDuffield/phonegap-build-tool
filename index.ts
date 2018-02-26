@@ -35,7 +35,7 @@ async function zip(): Promise<Buffer> {
   archive.glob('resources/**/*')
   archive.glob('config.xml')
   await archive.finalize()
-  console.log('Zipped app for upload')
+  console.log(`Zipped app for upload. Size ${fileOutput.size()}`)
   return fileOutput.getContents()
 }
 
@@ -55,12 +55,9 @@ async function build(platform: string) {
   // Submit
   const zipAsStream = new streamBuffers.ReadableStreamBuffer()
   zipAsStream.put(zippedApp)
-  const r = request.put(`${baseUrl}/apps/${args.appId}?auth_token=${args.token}`)
-  const form = r.form()
-  form.append('file', zipAsStream)
-  const res = await r
+  const res = await request.put(`${baseUrl}/apps/${args.appId}?auth_token=${args.token}`, {formData: {file: zipAsStream}})
   const appTitle = JSON.parse(res).title
-  console.log('Uploaded source code')
+  console.log(`Uploaded source code, new version ${JSON.parse(res).version}`)
   // Start build
   await request.post(`${baseUrl}/apps/${args.appId}/build/${platform}?auth_token=${args.token}`)
   console.log('Started build')
