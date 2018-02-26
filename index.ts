@@ -19,6 +19,12 @@ args
   .option('-s, --keyPassword <item>', 'Signing key password')
   .parse(process.argv)
 
+// Load from environments if needed
+if (!args.appId) { args.appId = process.env.PHONEGAP_APP_ID }
+if (!args.token) { args.token = process.env.PHONEGAP_AUTH_TOKEN }
+if (!args.keystorePassword) { args.keystorePassword = process.env.PHONEGAP_KEYSTORE_PASSWORD }
+if (!args.keyPassword) { args.keyPassword = process.env.PHONEGAP_KEY_PASSWORD }
+
 async function sleep(duration: number) {
   return new Promise((resolve, reject) => {
     setTimeout(() => resolve(), duration)

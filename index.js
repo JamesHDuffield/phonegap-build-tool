@@ -52,6 +52,19 @@ args
     .option('-k, --keystorePassword <item>', 'Keystore password')
     .option('-s, --keyPassword <item>', 'Signing key password')
     .parse(process.argv);
+// Load from environments if needed
+if (!args.appId) {
+    args.appId = process.env.PHONEGAP_APP_ID;
+}
+if (!args.token) {
+    args.token = process.env.PHONEGAP_AUTH_TOKEN;
+}
+if (!args.keystorePassword) {
+    args.keystorePassword = process.env.PHONEGAP_KEYSTORE_PASSWORD;
+}
+if (!args.keyPassword) {
+    args.keyPassword = process.env.PHONEGAP_KEY_PASSWORD;
+}
 function sleep(duration) {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
