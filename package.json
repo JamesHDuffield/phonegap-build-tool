@@ -1,7 +1,7 @@
 {
-  "name": "phonegap-build",
-  "version": "1.0.0",
-  "description": "",
+  "name": "phonegap-build-tool",
+  "version": "1.0.1",
+  "description": "A tool to build iOS and android cordova apps with phonegap build",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
