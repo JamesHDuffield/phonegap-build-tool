@@ -5,8 +5,7 @@ import * as args from 'commander'
 import * as fs from 'fs'
 import * as _ from 'lodash'
 import * as request from 'request-promise'
-import { Readable } from 'stream'
-import * as streamBuffers from 'stream-buffers'
+import * as stp from 'stream-to-promise'
 
 const baseUrl = 'https://build.phonegap.com/api/v1'
 const pollTime = 10000
@@ -26,7 +25,7 @@ async function sleep(duration: number) {
   })
 }
 
-function zip(): Readable {
+function zip(): Promise<Buffer> {
   const archive = archiver('zip', {
     zlib: { level: 9 },
   })
@@ -35,11 +34,11 @@ function zip(): Readable {
   archive.glob('config.xml')
   archive.finalize()
   console.log('Zipped app for upload.')
-  return archive
+  return stp(archive)
 }
 
 async function build(platform: string) {
-  const zippedApp = zip()
+  const zippedApp = await zip()
   // Get all keys
   const response = await request.get(`${baseUrl}/keys?auth_token=${args.token}`)
   const keyId = _.get(JSON.parse(response), `keys.${platform}.all[0].id`)

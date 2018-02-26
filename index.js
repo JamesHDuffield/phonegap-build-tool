@@ -41,6 +41,7 @@ var args = require("commander");
 var fs = require("fs");
 var _ = require("lodash");
 var request = require("request-promise");
+var stp = require("stream-to-promise");
 var baseUrl = 'https://build.phonegap.com/api/v1';
 var pollTime = 10000;
 args
@@ -69,30 +70,33 @@ function zip() {
     archive.glob('config.xml');
     archive.finalize();
     console.log('Zipped app for upload.');
-    return archive;
+    return stp(archive);
 }
 function build(platform) {
     return __awaiter(this, void 0, void 0, function () {
         var zippedApp, response, keyId, password, res, appTitle, status, e, result, outfilename, file;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0:
-                    zippedApp = zip();
-                    return [4 /*yield*/, request.get(baseUrl + "/keys?auth_token=" + args.token)];
+                case 0: return [4 /*yield*/, zip()
+                    // Get all keys
+                ];
                 case 1:
+                    zippedApp = _a.sent();
+                    return [4 /*yield*/, request.get(baseUrl + "/keys?auth_token=" + args.token)];
+                case 2:
                     response = _a.sent();
                     keyId = _.get(JSON.parse(response), "keys." + platform + ".all[0].id");
-                    if (!!keyId) return [3 /*break*/, 2];
+                    if (!!keyId) return [3 /*break*/, 3];
                     console.info('No signing key found for this platform');
-                    return [3 /*break*/, 4];
-                case 2:
+                    return [3 /*break*/, 5];
+                case 3:
                     password = platform === 'ios' ? { password: args.keystorePassword } : { key_pw: args.keyPassword, keystore_pw: args.keystorePassword };
                     return [4 /*yield*/, request.put(baseUrl + "/keys/" + platform + "/" + keyId + "?auth_token=" + args.token, { formData: { data: JSON.stringify(password) } })];
-                case 3:
+                case 4:
                     _a.sent();
                     console.log('Unlocked key');
-                    _a.label = 4;
-                case 4: return [4 /*yield*/, request.put(baseUrl + "/apps/" + args.appId + "?auth_token=" + args.token, {
+                    _a.label = 5;
+                case 5: return [4 /*yield*/, request.put(baseUrl + "/apps/" + args.appId + "?auth_token=" + args.token, {
                         formData: {
                             file: {
                                 value: zippedApp,
@@ -103,25 +107,25 @@ function build(platform) {
                             },
                         },
                     })];
-                case 5:
+                case 6:
                     res = _a.sent();
                     appTitle = JSON.parse(res).title;
                     console.log("Uploaded source code, new version " + JSON.parse(res).version);
                     // Start build
                     return [4 /*yield*/, request.post(baseUrl + "/apps/" + args.appId + "/build/" + platform + "?auth_token=" + args.token)];
-                case 6:
+                case 7:
                     // Start build
                     _a.sent();
                     console.log('Started build');
                     status = 'pending';
-                    _a.label = 7;
-                case 7:
-                    if (!(status === 'pending')) return [3 /*break*/, 10];
-                    return [4 /*yield*/, sleep(pollTime)];
+                    _a.label = 8;
                 case 8:
+                    if (!(status === 'pending')) return [3 /*break*/, 11];
+                    return [4 /*yield*/, sleep(pollTime)];
+                case 9:
                     _a.sent();
                     return [4 /*yield*/, request.get(baseUrl + "/apps/" + args.appId + "?auth_token=" + args.token)];
-                case 9:
+                case 10:
                     e = _a.sent();
                     result = JSON.parse(e);
                     status = result.status[platform];
@@ -129,16 +133,16 @@ function build(platform) {
                     if (status === 'error') {
                         console.log("Error: " + result.error[platform]);
                     }
-                    return [3 /*break*/, 7];
-                case 10:
-                    if (!(status === 'complete')) return [3 /*break*/, 12];
+                    return [3 /*break*/, 8];
+                case 11:
+                    if (!(status === 'complete')) return [3 /*break*/, 13];
                     outfilename = (appTitle ? appTitle : 'app') + "-" + platform + "." + (platform === 'ios' ? 'ipa' : 'apk');
                     return [4 /*yield*/, request.get(baseUrl + "/apps/" + args.appId + "/" + platform + "?auth_token=" + args.token).pipe(fs.createWriteStream(outfilename))];
-                case 11:
+                case 12:
                     file = _a.sent();
                     console.log("Downloaded " + outfilename);
-                    _a.label = 12;
-                case 12: return [2 /*return*/];
+                    _a.label = 13;
+                case 13: return [2 /*return*/];
             }
         });
     });
