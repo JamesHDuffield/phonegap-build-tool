@@ -5,6 +5,7 @@ import * as args from 'commander'
 import * as fs from 'fs'
 import * as _ from 'lodash'
 import * as request from 'request-promise'
+import { Readable } from 'stream'
 import * as streamBuffers from 'stream-buffers'
 
 const baseUrl = 'https://build.phonegap.com/api/v1'
@@ -25,22 +26,20 @@ async function sleep(duration: number) {
   })
 }
 
-async function zip(): Promise<Buffer> {
-  const fileOutput = new streamBuffers.WritableStreamBuffer()
+function zip(): Readable {
   const archive = archiver('zip', {
     zlib: { level: 9 },
   })
-  archive.pipe(fileOutput)
   archive.glob('www/**/*')
   archive.glob('resources/**/*')
   archive.glob('config.xml')
-  await archive.finalize()
-  console.log(`Zipped app for upload. Size ${fileOutput.size()}`)
-  return fileOutput.getContents()
+  archive.finalize()
+  console.log('Zipped app for upload.')
+  return archive
 }
 
 async function build(platform: string) {
-  const zippedApp = await zip()
+  const zippedApp = zip()
   // Get all keys
   const response = await request.get(`${baseUrl}/keys?auth_token=${args.token}`)
   const keyId = _.get(JSON.parse(response), `keys.${platform}.all[0].id`)
@@ -53,9 +52,17 @@ async function build(platform: string) {
     console.log('Unlocked key')
   }
   // Submit
-  const zipAsStream = new streamBuffers.ReadableStreamBuffer()
-  zipAsStream.put(zippedApp)
-  const res = await request.put(`${baseUrl}/apps/${args.appId}?auth_token=${args.token}`, {formData: {file: zipAsStream}})
+  const res = await request.put(`${baseUrl}/apps/${args.appId}?auth_token=${args.token}`, {
+    formData: {
+      file: {
+        value: zippedApp,
+        options: {
+          filename: 'www.zip',
+          contentType: 'application/zip',
+        },
+      },
+    },
+  })
   const appTitle = JSON.parse(res).title
   console.log(`Uploaded source code, new version ${JSON.parse(res).version}`)
   // Start build
