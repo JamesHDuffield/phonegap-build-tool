@@ -91,7 +91,7 @@ function zip() {
 }
 function build(platform) {
     return __awaiter(this, void 0, void 0, function () {
-        var zippedApp, response, password, res, appTitle, status, e, result, outfilename, file;
+        var zippedApp, response, password, keys, res, appTitle, status, e, result, outfilename, file;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, zip()
@@ -116,17 +116,28 @@ function build(platform) {
                     _a.sent();
                     console.log('Unlocked key');
                     _a.label = 5;
-                case 5: return [4 /*yield*/, request.put(baseUrl + "/apps/" + args.appId + "?auth_token=" + args.token, {
-                        formData: {
-                            file: {
-                                value: zippedApp,
-                                options: {
-                                    filename: 'www.zip',
-                                    contentType: 'application/zip',
+                case 5:
+                    keys = {};
+                    keys[platform] = { id: args.keyId };
+                    return [4 /*yield*/, request.put(baseUrl + "/apps/" + args.appId + "?auth_token=" + args.token, {
+                            formData: {
+                                file: {
+                                    value: zippedApp,
+                                    options: {
+                                        filename: 'www.zip',
+                                        contentType: 'application/zip',
+                                    },
+                                },
+                                data: {
+                                    keys: {
+                                        value: keys,
+                                        options: {
+                                            contentType: 'application/json',
+                                        },
+                                    },
                                 },
                             },
-                        },
-                    })];
+                        })];
                 case 6:
                     res = _a.sent();
                     appTitle = JSON.parse(res).title;

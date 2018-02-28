@@ -63,6 +63,8 @@ async function build(platform: string) {
     console.log('Unlocked key')
   }
   // Submit
+  const keys = {}
+  keys[platform] = { id: args.keyId }
   const res = await request.put(`${baseUrl}/apps/${args.appId}?auth_token=${args.token}`, {
     formData: {
       file: {
@@ -70,6 +72,14 @@ async function build(platform: string) {
         options: {
           filename: 'www.zip',
           contentType: 'application/zip',
+        },
+      },
+      data: {
+        keys: {
+          value: keys,
+          options: {
+            contentType: 'application/json',
+          },
         },
       },
     },
