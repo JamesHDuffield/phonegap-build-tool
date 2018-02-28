@@ -15,6 +15,7 @@ args
   .option('-a, --appId <item>', 'Phone gap app id', parseInt)
   .option('-t, --token <item>', 'Phone gap build API auth token')
   .option('-p, --platform <item>', 'Platform')
+  .option('-i, --keyId <item>', 'Key id')
   .option('-k, --keystorePassword <item>', 'Keystore password')
   .option('-s, --keyPassword <item>', 'Signing key password')
   .parse(process.argv)
@@ -24,6 +25,7 @@ if (!args.appId) { args.appId = process.env.PHONEGAP_APP_ID }
 if (!args.token) { args.token = process.env.PHONEGAP_AUTH_TOKEN }
 if (!args.keystorePassword) { args.keystorePassword = process.env.PHONEGAP_KEYSTORE_PASSWORD }
 if (!args.keyPassword) { args.keyPassword = process.env.PHONEGAP_KEY_PASSWORD }
+if (!args.keyId) { args.keyId = process.env.PHONEGAP_KEY_ID }
 
 async function sleep(duration: number) {
   return new Promise((resolve, reject) => {
@@ -46,14 +48,18 @@ function zip(): Promise<Buffer> {
 async function build(platform: string) {
   const zippedApp = await zip()
   // Get all keys
-  const response = await request.get(`${baseUrl}/keys?auth_token=${args.token}`)
-  const keyId = _.get(JSON.parse(response), `keys.${platform}.all[0].id`)
-  if (!keyId) {
-    console.info('No signing key found for this platform')
-  } else {
-     // Unlock key
+  if (!args.keyId) {
+    const response = await request.get(`${baseUrl}/keys?auth_token=${args.token}`)
+    args.keyId = _.get(JSON.parse(response), `keys.${platform}.all[0].id`)
+    if (!args.keyId) {
+      console.info('No signing key found for this platform')
+    }
+  }
+
+  if (args.keyId) {
+    // Unlock key
     const password = platform === 'ios' ? { password: args.keystorePassword } : { key_pw: args.keyPassword, keystore_pw: args.keystorePassword }
-    await request.put(`${baseUrl}/keys/${platform}/${keyId}?auth_token=${args.token}`, { formData: { data: JSON.stringify(password) } })
+    await request.put(`${baseUrl}/keys/${platform}/${args.keyId}?auth_token=${args.token}`, { formData: { data: JSON.stringify(password) } })
     console.log('Unlocked key')
   }
   // Submit

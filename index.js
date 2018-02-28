@@ -49,6 +49,7 @@ args
     .option('-a, --appId <item>', 'Phone gap app id', parseInt)
     .option('-t, --token <item>', 'Phone gap build API auth token')
     .option('-p, --platform <item>', 'Platform')
+    .option('-i, --keyId <item>', 'Key id')
     .option('-k, --keystorePassword <item>', 'Keystore password')
     .option('-s, --keyPassword <item>', 'Signing key password')
     .parse(process.argv);
@@ -64,6 +65,9 @@ if (!args.keystorePassword) {
 }
 if (!args.keyPassword) {
     args.keyPassword = process.env.PHONEGAP_KEY_PASSWORD;
+}
+if (!args.keyId) {
+    args.keyId = process.env.PHONEGAP_KEY_ID;
 }
 function sleep(duration) {
     return __awaiter(this, void 0, void 0, function () {
@@ -87,7 +91,7 @@ function zip() {
 }
 function build(platform) {
     return __awaiter(this, void 0, void 0, function () {
-        var zippedApp, response, keyId, password, res, appTitle, status, e, result, outfilename, file;
+        var zippedApp, response, password, res, appTitle, status, e, result, outfilename, file;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, zip()
@@ -95,16 +99,19 @@ function build(platform) {
                 ];
                 case 1:
                     zippedApp = _a.sent();
+                    if (!!args.keyId) return [3 /*break*/, 3];
                     return [4 /*yield*/, request.get(baseUrl + "/keys?auth_token=" + args.token)];
                 case 2:
                     response = _a.sent();
-                    keyId = _.get(JSON.parse(response), "keys." + platform + ".all[0].id");
-                    if (!!keyId) return [3 /*break*/, 3];
-                    console.info('No signing key found for this platform');
-                    return [3 /*break*/, 5];
+                    args.keyId = _.get(JSON.parse(response), "keys." + platform + ".all[0].id");
+                    if (!args.keyId) {
+                        console.info('No signing key found for this platform');
+                    }
+                    _a.label = 3;
                 case 3:
+                    if (!args.keyId) return [3 /*break*/, 5];
                     password = platform === 'ios' ? { password: args.keystorePassword } : { key_pw: args.keyPassword, keystore_pw: args.keystorePassword };
-                    return [4 /*yield*/, request.put(baseUrl + "/keys/" + platform + "/" + keyId + "?auth_token=" + args.token, { formData: { data: JSON.stringify(password) } })];
+                    return [4 /*yield*/, request.put(baseUrl + "/keys/" + platform + "/" + args.keyId + "?auth_token=" + args.token, { formData: { data: JSON.stringify(password) } })];
                 case 4:
                     _a.sent();
                     console.log('Unlocked key');
